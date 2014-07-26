@@ -184,7 +184,7 @@ module FakeS3
       output = ""
       xml = Builder::XmlMarkup.new(:target => output)
       xml.instruct! :xml, :version=>"1.0", :encoding=>"UTF-8"
-      xml.CopyObjectResult { |result|
+      xml.CopyObjectResult(:xmlns => "http://s3.amazonaws.com/doc/2006-03-01/") { |result|
         result.LastModified(object.modified_date)
         result.ETag("\"#{object.md5}\"")
       }
