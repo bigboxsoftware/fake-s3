@@ -48,6 +48,13 @@ module FakeS3
       @root_hostnames = [hostname,'localhost','s3.amazonaws.com','s3.localhost']
     end
 
+    def validate_request(request)
+       req = request.webrick_request
+       return if req.nil?
+       return if not req.header.has_key?('expect')
+       req.continue if req.header['expect'].first=='100-continue'
+    end
+
     def do_GET(request, response)
       s_req = normalize_request(request)
 
@@ -96,6 +103,10 @@ module FakeS3
         response.header['ETag'] = "\"#{real_obj.md5}\""
         response['Accept-Ranges'] = "bytes"
         response['Last-Ranges'] = "bytes"
+
+	real_obj.custom_metadata.each do |header, value|
+	  response.header['x-amz-meta-' + header] = value
+	end
 
         content_length = stat.size
 
@@ -353,6 +364,8 @@ module FakeS3
         raise "Unknown Request"
       end
 
+      validate_request(s_req)
+  
       return s_req
     end
 
